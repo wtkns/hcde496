@@ -55,7 +55,7 @@ def call_img2img_api(**payload):
 
 if __name__ == '__main__':
     payload = {
-        "prompt": "masterpiece, (best quality:1.1), 1girl <lora:lora_model:1>",  # extra networks also in prompts
+        "prompt": "masterpiece, (best quality:1.1), adorable puppies forever <lora:lora_model:1>",  # extra networks also in prompts
         "negative_prompt": "",
         "seed": 1,
         "steps": 20,
@@ -136,14 +136,14 @@ if __name__ == '__main__':
     call_txt2img_api(**payload)
 
     init_images = [
-        encode_file_to_base64(r"G:\Shared drives\080 - Code\Python\ffmpegTest\images\image001.jpg"),
+        encode_file_to_base64(r"G:\Shared drives\080 - Code\Python\HCDE496\ffmpegTest\images\image001.jpg"),
         # encode_file_to_base64(r"B:\path\to\img_2.png"),
         # "https://image.can/also/be/a/http/url.png",
     ]
 
     batch_size = 2
     payload = {
-        "prompt": "woman on a train",
+        "prompt": "infinity puppies",
         "seed": 1,
         "steps": 20,
         "width": 512,
