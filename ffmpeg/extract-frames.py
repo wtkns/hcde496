@@ -4,7 +4,7 @@ source = "\"G:\\Shared drives\\080 - Code\\Python\\hcde496\\ffmpeg\\videos\\tigh
 output = "\"G:\\Shared drives\\080 - Code\\Python\\hcde496\\ffmpeg\\images\\image%03d.jpg\""
 
 
-command = ['ffmpeg', '-i', source, '-vf', 'fps=0.5',  '-y', output]
+command = ['ffmpeg', '-i', source, '-vf', 'fps=2',  '-y', output]
 
 cmdstr = ' '.join(command)
 
