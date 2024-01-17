@@ -5,11 +5,11 @@ import json
 import time
 import os
 
-prompt = "tightrope walker in the mountains"
-negative_prompt = ""
-imgfileDir = "G:\\Shared drives\\080 - Code\\Python\\hcde496\\ffmpeg\\images\\"
+prompt = "colorful dancer elaborate costume"
+negative_prompt = "monochrome"
+imgfileDir = "G:\\Shared drives\\080 - Code\\Python\\hcde496\\ffmpeg\\tophat\\input\\"
 webui_server_url = 'http://127.0.0.1:7860'
-out_dir = "G:\\Shared drives\\080 - Code\\Python\\hcde496\\ffmpeg\\images\\"
+out_dir = "G:\\Shared drives\\080 - Code\\Python\\hcde496\\ffmpeg\\tophat\\"
 out_dir_i2i = os.path.join(out_dir, 'output')
 
 def timestamp():
@@ -50,20 +50,25 @@ if __name__ == '__main__':
     for filenum in range(len(img_dir_list)):
         file = img_dir_list[filenum]
         imageFile = imgfileDir + file
+       
+        print(imageFile)
 
         init_images = [
-            encode_file_to_base64(imageFile),
+             encode_file_to_base64(imageFile),
         ]
         
+        denoise = filenum * (0.75/len(img_dir_list))
+        print(denoise)
+                
         batch_size = 1
         payload = {
             "prompt": prompt,
             "negative_prompt": negative_prompt,
             "seed": -1,
-            "steps": 20,
+            "steps": 30,
             "width": 512,
             "height": 512,
-            "denoising_strength": 0.5,
+            "denoising_strength": denoise,
             "n_iter": 1,
             "init_images": init_images,
             "batch_size": batch_size if len(init_images) == 1 else len(init_images),
