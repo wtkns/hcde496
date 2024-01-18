@@ -6,6 +6,7 @@ import time
 import os
 import subprocess
 from PIL import Image
+from io import BytesIO
 
 ffmpeg = os.path.join("D:\\", "bin", "ffmpeg.exe")
 project_name = "tophat"
@@ -64,14 +65,9 @@ def call_api(api_endpoint, **payload):
     return json.loads(response.read().decode('utf-8'))
 
 
-def call_img2img_api(filenum, **payload):
-    response = call_api('sdapi/v1/img2img', **payload)
-    for index, image in enumerate(response.get('images')):
-        print(index)
-        print(response)
+def call_img2img_api(**payload):
+    return call_api('sdapi/v1/img2img', **payload)
 
-#         save_path = os.path.join(out_dir_i2i, f'img2img{filenum:03d}.png')
-#         decode_and_save_base64(image, save_path)
 
 if __name__ == '__main__':
     # extract_frames(video_in_file, image_in_dir, project_name, 30, 10, 15)
@@ -82,12 +78,10 @@ if __name__ == '__main__':
     # im3 = blend_images(image_input_list[0], image_output_list[150], 0.5)
     # im3.show()
 
-    for filenum in range(len(image_input_list)):
-        file = image_input_list[filenum]
-        init_images = [
-            encode_file_to_base64(file),
-        ]
-
+    # for filenum in range(len(image_input_list)):
+    for filenum in range(5):
+        file_in = image_input_list[filenum]
+        image_in = encode_file_to_base64(file_in)
         payload = {
             "prompt": prompt,
             "negative_prompt": negative_prompt,
@@ -97,18 +91,23 @@ if __name__ == '__main__':
             "height": 512,
             "denoising_strength": denoise,
             "n_iter": 1,
-            "init_images": init_images,
-            "batch_size": batch_size if len(init_images) == 1 else len(init_images),
+            "init_images": [image_in],
+            "batch_size": batch_size,
             # "mask": encode_file_to_base64(r"B:\path\to\mask.png")
         }
 
-        call_img2img_api(filenum, **payload)
+        response = call_img2img_api(**payload)
+
+        for index, image in enumerate(response.get('images')):
+            file_out = BytesIO(base64.b64decode(image))
+            blend = blend_images(file_in, file_out, blend = 0.5)
+            blend.show()
+
+            # print(type(base64_string))
+
+            # decode_and_save_base64(image, os.path.join(image_out_dir, f'imagetest{filenum}.jpg'))
+            # decodeimage = 
+            # decoded = Image.open(decodeimage)
 
 
-
-
-
-
-
-
-
+        # 
