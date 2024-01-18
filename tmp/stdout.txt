@@ -1,0 +1,8 @@
+ Volume in drive D is Storage
+ Volume Serial Number is E892-828A
+
+ Directory of D:\stableDiffusion\stable-diffusion-webui\venv\Scripts
+
+01/11/2024  02:21 PM           266,664 python.exe
+               1 File(s)        266,664 bytes
+               0 Dir(s)  2,034,389,737,472 bytes free
