@@ -68,6 +68,22 @@ def call_api(api_endpoint, **payload):
 def call_img2img_api(**payload):
     return call_api('sdapi/v1/img2img', **payload)
 
+def img2img_payload(pl_image, pl_prompt, pl_negative_prompt, pl_seed = -1, pl_steps = 30, pl_denoise = 0.5):
+    return {
+            "prompt": pl_prompt,
+            "negative_prompt": pl_negative_prompt,
+            "seed": pl_seed,
+            "steps": pl_steps,
+            "width": 512,
+            "height": 512,
+            "denoising_strength": pl_denoise,
+            "n_iter": 1,
+            "init_images": [pl_image],
+            "batch_size": 1,
+            # "mask": encode_file_to_base64(r"B:\path\to\mask.png")
+        }
+
+
 
 if __name__ == '__main__':
     # extract_frames(video_in_file, image_in_dir, project_name, 30, 10, 15)
@@ -75,39 +91,16 @@ if __name__ == '__main__':
     batch_size = 1
     image_input_list = get_image_list(image_in_dir)
 
-    # im3 = blend_images(image_input_list[0], image_output_list[150], 0.5)
-    # im3.show()
-
-    # for filenum in range(len(image_input_list)):
-    for filenum in range(5):
+    for filenum in range(2): # (len(image_input_list)):
         file_in = image_input_list[filenum]
         image_in = encode_file_to_base64(file_in)
-        payload = {
-            "prompt": prompt,
-            "negative_prompt": negative_prompt,
-            "seed": -1,
-            "steps": 30,
-            "width": 512,
-            "height": 512,
-            "denoising_strength": denoise,
-            "n_iter": 1,
-            "init_images": [image_in],
-            "batch_size": batch_size,
-            # "mask": encode_file_to_base64(r"B:\path\to\mask.png")
-        }
+        payload = img2img_payload(image_in, prompt, negative_prompt, -1, 30, 0.5)
+        print(payload)
 
         response = call_img2img_api(**payload)
+        images = response.get('images')
 
         for index, image in enumerate(response.get('images')):
             file_out = BytesIO(base64.b64decode(image))
             blend = blend_images(file_in, file_out, blend = 0.5)
             blend.show()
-
-            # print(type(base64_string))
-
-            # decode_and_save_base64(image, os.path.join(image_out_dir, f'imagetest{filenum}.jpg'))
-            # decodeimage = 
-            # decoded = Image.open(decodeimage)
-
-
-        # 
