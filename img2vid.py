@@ -12,7 +12,7 @@ ffmpeg = os.path.join("D:\\", "bin", "ffmpeg.exe")
 project_name = "tophat"
 webui_server_url = 'http://127.0.0.1:7860'
 
-root_dir = os.path.join("G:\\", "Shared drives", "080 - Code", "Python", "hcde496")
+root_dir = os.path.join("D:\\", "hcde496")
 project_dir = os.path.join(root_dir, "Projects", project_name)
 image_in_dir = os.path.join(project_dir, "images", "input")
 image_out_dir = os.path.join(project_dir, "images", "output")

@@ -44,7 +44,7 @@ cd D:\stableDiffusion\stable-diffusion-webui
 py -m venv .venv
 .venv\Scripts\activate
 py -m pip install --upgrade pip
-py -m pip install requests pillow
+py -m pip install requests pillow numpy matplotlib opencv-python imutils
 
 
 

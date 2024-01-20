@@ -9,7 +9,7 @@ webui_server_url = 'http://127.0.0.1:7860'
 
 prompt = "adorable puppies forever"
 negative_prompt = "not anime"
-out_dir = "G:\\Shared drives\\080 - Code\\Python\\hcde496\\sd_api\\output\\"
+out_dir = "D:\\hcde496\\sd_api\\output\\"
 out_dir_t2i = os.path.join(out_dir, 'txt2img')
 
 def timestamp():

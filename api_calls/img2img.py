@@ -7,9 +7,9 @@ import os
 
 prompt = "colorful dancer elaborate costume"
 negative_prompt = "monochrome"
-imgfileDir = "G:\\Shared drives\\080 - Code\\Python\\hcde496\\ffmpeg\\tophat\\input\\"
+imgfileDir = "D:\\hcde496\\ffmpeg\\tophat\\input\\"
 webui_server_url = 'http://127.0.0.1:7860'
-out_dir = "G:\\Shared drives\\080 - Code\\Python\\hcde496\\ffmpeg\\tophat\\"
+out_dir = "D:\\Python\\hcde496\\ffmpeg\\tophat\\"
 out_dir_i2i = os.path.join(out_dir, 'output')
 
 def timestamp():

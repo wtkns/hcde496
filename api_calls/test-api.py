@@ -6,7 +6,7 @@ import time
 from PIL import Image
 
 url = "http://127.0.0.1:7860"
-output = "G:\\Shared drives\\080 - Code\\Python\\hcde496\\sd_api\\output\\test\\"
+output = "D:\\hcde496\\sd_api\\output\\test\\"
 timestr = time.strftime("%Y%m%d-%H%M%S")
 
 payload = {
