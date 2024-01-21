@@ -41,10 +41,10 @@ cd D:\stableDiffusion\stable-diffusion-webui
 .\api-webui-user.bat
 
 ## Setup
-py -m venv .venv
+python -m venv .venv
 .venv\Scripts\activate
-py -m pip install --upgrade pip
-py -m pip install requests pillow numpy matplotlib opencv-python imutils
+python -m pip install --upgrade pip
+python -m pip install wheel requests pillow numpy matplotlib opencv-python imutils torch
 
 
 

@@ -9,8 +9,8 @@ webui_server_url = 'http://127.0.0.1:7860'
 
 prompt = "adorable puppies forever"
 negative_prompt = "not anime"
-out_dir = "D:\\hcde496\\sd_api\\output\\"
-out_dir_t2i = os.path.join(out_dir, 'txt2img')
+out_dir = "D:\\hcde496\\"
+
 
 def timestamp():
     return datetime.fromtimestamp(time.time()).strftime("%Y%m%d-%H%M%S")
@@ -36,7 +36,7 @@ def call_api(api_endpoint, **payload):
 def call_txt2img_api(**payload):
     response = call_api('sdapi/v1/txt2img', **payload)
     for index, image in enumerate(response.get('images')):
-        save_path = os.path.join(out_dir_t2i, f'txt2img-{timestamp()}-{index}.png')
+        save_path = os.path.join(out_dir, f'txt2img-{timestamp()}-{index}.png')
         decode_and_save_base64(image, save_path)
 
 if __name__ == '__main__':
