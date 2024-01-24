@@ -1,10 +1,10 @@
 import subprocess
 ffmpeg = "D:\\bin\\ffmpeg.exe"
-source = "\"D:\\hcde496\\ffmpeg\\videos\\tightrope.mov\""
-output = "\"D:\\hcde496\\ffmpeg\\images\\image%03d.jpg\""
+source = "\"D:\\hcde496\\Projects\\tophat\\videos\\input\\tophat.mp4\""
+output = "\"D:\\hcde496\\Projects\\tophat\\images\\input\\image%03d.jpg\""
 
 
-command = ['ffmpeg', '-i', source, '-vf', 'fps=2',  '-y', output]
+command = ['ffmpeg', '-i', source, '-vf', 'fps=20',  '-y', output]
 
 cmdstr = ' '.join(command)
 

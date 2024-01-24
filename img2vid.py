@@ -15,6 +15,7 @@ webui_server_url = 'http://127.0.0.1:7860'
 root_dir = os.path.join("D:\\", "hcde496")
 project_dir = os.path.join(root_dir, "Projects", project_name)
 image_in_dir = os.path.join(project_dir, "images", "input")
+pose_dir = os.path.join(project_dir, "images", "pose")
 image_out_dir = os.path.join(project_dir, "images", "output")
 video_in_dir = os.path.join(project_dir, "videos", "input")
 video_out_dir = os.path.join(project_dir, "videos", "output")
