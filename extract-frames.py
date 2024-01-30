@@ -1,7 +1,7 @@
 import subprocess
 ffmpeg = "D:\\bin\\ffmpeg.exe"
-source = "\"D:\\hcde496\\Projects\\tophat\\videos\\input\\tophat.mp4\""
-output = "\"D:\\hcde496\\Projects\\tophat\\images\\input\\image%03d.jpg\""
+source = "\"D:\\hcde496\\Projects\\meshes\\meshes2.mp4\""
+output = "\"D:\\hcde496\\Projects\\meshes\\images2\\image%03d.jpg\""
 
 
 command = ['ffmpeg', '-i', source, '-vf', 'fps=20',  '-y', output]
