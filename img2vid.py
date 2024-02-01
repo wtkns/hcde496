@@ -8,49 +8,12 @@ import subprocess
 from PIL import Image
 from io import BytesIO
 
-ffmpeg = os.path.join("D:\\", "bin", "ffmpeg.exe")
-project_name = "meshes"
-webui_server_url = 'http://127.0.0.1:7860'
-
-root_dir = os.path.join("D:\\", "hcde496")
-project_dir = os.path.join(root_dir, "Projects", project_name)
-image_in_dir = os.path.join(project_dir, "images", "input")
-image_out_dir = os.path.join(project_dir, "images", "output", )
-
-session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
-session_path = os.path.join(image_out_dir, session_name )
-os.mkdir(session_path)
-
- 
-# pose_dir = os.path.join(project_dir, "images", "pose")
-video_in_dir = os.path.join(project_dir, "videos", "input")
-video_out_dir = os.path.join(project_dir, "videos", "output")
-# video_in_file = os.path.join(video_in_dir, f'{project_name}.mkv')
-
-prompt = "totally fascinating cinematic exciting dramatic lighting highly detailed and intricate"
-negative_prompt = "monochrome"
-
-# 
-
-def extract_frames(video_file_path, image_path, image_name, start_time = 0, duration = 10, fps = 30):
-    output_path = os.path.join(image_path, f'{image_name}%04d.jpg')
-    command = [ffmpeg, '-ss', f'{start_time}', '-t', f'{duration}', '-i', f'"{video_file_path}"', '-vf', f'fps={fps}', '-y', f'"{output_path}"']
-    cmdstr = ' '.join(command)
-    print(cmdstr)
-
-    if subprocess.run(cmdstr).returncode == 0:
-        print ("FFmpeg Script Ran Successfully")
-    else:
-        print ("There was an error running your FFmpeg script")
+def get_image_list(image_dir):
+    return [os.path.join(image_dir, image_name) for image_name in os.listdir(image_dir)] 
 
 def get_img_in(filename):
     with open(filename, 'rb') as file:
         return base64.b64encode(file.read()).decode('utf-8')
-    
-
-
-def get_image_list(image_dir):
-    return [os.path.join(image_dir, image_name) for image_name in os.listdir(image_dir)] 
 
 def encode_file_to_base64(path):
     with open(path, 'rb') as file:
@@ -69,7 +32,6 @@ def call_api(api_endpoint, **payload):
     )
     response = urllib.request.urlopen(request)
     return json.loads(response.read().decode('utf-8'))
-
 
 def call_img2img_api(**payload):
     return call_api('sdapi/v1/img2img', **payload)
@@ -106,25 +68,51 @@ def blend_images(image_one_enc, image_two_enc, blend = 0.5):
     blend_bytes = blend_file.getvalue()  # blend_bytes: image in binary format.
     return base64.b64encode(blend_bytes).decode('utf-8')
 
+def denoise_incr(incr_num, total):
+    return (((incr_num +1) * (0.3/total))+0.45)
+
 if __name__ == '__main__':
-    # extract_frames(video_in_file, image_in_dir, project_name, 30, 10, 15)
-    denoise = 0.5
+    project_name = "meshes"
+    webui_server_url = 'http://127.0.0.1:7860'
+
+    root_dir = os.path.join("D:\\", "hcde496")
+    project_dir = os.path.join(root_dir, "Projects", project_name)
+
+    # input
+    image_in_dir = os.path.join(project_dir, "images", "input")
+    pose_dir = os.path.join(project_dir, "images", "pose")
+
+    #output
+    image_out_dir = os.path.join(project_dir, "images", "output", )
+
+    session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+    session_path = os.path.join(image_out_dir, session_name )
+    os.mkdir(session_path)
+
+    prompt = "totally fascinating cinematic exciting dramatic lighting highly detailed and intricate"
+    negative_prompt = "monochrome"
+
     batch_size = 1
     image_input_list = get_image_list(image_in_dir)
+    project_len = len(image_input_list)
+
     seed_img_enc = encode_file_to_base64(image_input_list[0])
-    # show_img(seed_img_enc)
-    
 
-    for filenum in range(len(image_input_list)): # (5): # 
-        denoise_incr = ((filenum + 1) * (0.3/len(image_input_list))+0.45)
-        print(denoise_incr)
 
-        file_in = image_input_list[filenum]
-        image_in_enc = encode_file_to_base64(file_in)
+    for filenum in range(project_len): # (5): # 
+        print(filenum, " of ", project_len)
+        image_in_raw = image_input_list[filenum]
+        image_in_enc = encode_file_to_base64(image_in_raw)
+
+
+        denoise = denoise_incr(filenum, len(image_input_list))
+        print(denoise)
+
         blend_enc = blend_images(seed_img_enc, image_in_enc, blend = 0.15)
+        show_img(blend_enc)
         # add exponential random for blend? or based on modulo
 
-        payload = img2img_payload(blend_enc, prompt, negative_prompt, -1, 30, denoise_incr)
+        payload = img2img_payload(blend_enc, prompt, negative_prompt, -1, 30, denoise)
         response = call_img2img_api(**payload)
         images = response.get('images')
 
@@ -133,5 +121,7 @@ if __name__ == '__main__':
 
         for index, image in enumerate(response.get('images')):
             decode_and_save_base64(image, image_out_path)
+
+            show_img(seed_img_enc)
             seed_img_enc = image
-            # show_img(seed_img_enc)
+            show_img(seed_img_enc)
