@@ -15,14 +15,22 @@ webui_server_url = 'http://127.0.0.1:7860'
 root_dir = os.path.join("D:\\", "hcde496")
 project_dir = os.path.join(root_dir, "Projects", project_name)
 image_in_dir = os.path.join(project_dir, "images", "input")
+image_out_dir = os.path.join(project_dir, "images", "output", )
+
+session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+session_path = os.path.join(image_out_dir, session_name )
+os.mkdir(session_path)
+
+ 
 # pose_dir = os.path.join(project_dir, "images", "pose")
-image_out_dir = os.path.join(project_dir, "images", "output")
-# video_in_dir = os.path.join(project_dir, "videos", "input")
-# video_out_dir = os.path.join(project_dir, "videos", "output")
+video_in_dir = os.path.join(project_dir, "videos", "input")
+video_out_dir = os.path.join(project_dir, "videos", "output")
 # video_in_file = os.path.join(video_in_dir, f'{project_name}.mkv')
 
-prompt = "bubbling cosmic debris"
+prompt = "totally fascinating cinematic exciting dramatic lighting highly detailed and intricate"
 negative_prompt = "monochrome"
+
+# 
 
 def extract_frames(video_file_path, image_path, image_name, start_time = 0, duration = 10, fps = 30):
     output_path = os.path.join(image_path, f'{image_name}%04d.jpg')
@@ -85,7 +93,11 @@ def show_img(image_enc):
     Image.open(BytesIO(base64.b64decode(image_enc))).show()
     return 1
 
+def img_out_path(filenum):
+    return os.path.join(session_path, f'image-{filenum:03d}.png')
+
 def blend_images(image_one_enc, image_two_enc, blend = 0.5):
+    # If alpha is 0.0, a copy of the first image is returned. If alpha is 1.0, a copy of the second image is returned. 
     image_one_dec = Image.open(BytesIO(base64.b64decode(image_one_enc)))
     image_two_dec = Image.open(BytesIO(base64.b64decode(image_two_enc)))
     img_blend_dec = Image.blend(image_one_dec, image_two_dec, blend)
@@ -99,34 +111,27 @@ if __name__ == '__main__':
     denoise = 0.5
     batch_size = 1
     image_input_list = get_image_list(image_in_dir)
-    seed_img_enc = encode_file_to_base64(image_input_list[100])
+    seed_img_enc = encode_file_to_base64(image_input_list[0])
     # show_img(seed_img_enc)
     
 
     for filenum in range(len(image_input_list)): # (5): # 
+        denoise_incr = ((filenum + 1) * (0.3/len(image_input_list))+0.45)
+        print(denoise_incr)
+
         file_in = image_input_list[filenum]
         image_in_enc = encode_file_to_base64(file_in)
-        blend_enc = blend_images(seed_img_enc, image_in_enc, blend = 0.25)
-        payload = img2img_payload(blend_enc, prompt, negative_prompt, 30619249, 30, 0.5)
+        blend_enc = blend_images(seed_img_enc, image_in_enc, blend = 0.15)
+        # add exponential random for blend? or based on modulo
+
+        payload = img2img_payload(blend_enc, prompt, negative_prompt, -1, 30, denoise_incr)
         response = call_img2img_api(**payload)
         images = response.get('images')
-        image_out_path = os.path.join(image_out_dir, f'image-{filenum:03d}.jpg')
+
+        image_out_path = img_out_path(filenum)
         print(image_out_path)
 
         for index, image in enumerate(response.get('images')):
             decode_and_save_base64(image, image_out_path)
             seed_img_enc = image
-
-        # seed_img_enc = blend_enc
-        # show_img(blend_enc)
-
-
-    #     # print(payload)
-
-        # 
-        # 
-
-
-
-    #         blend = blend_images(file_in, file_out, blend = 0.5)
-    #         blend.show()
+            # show_img(seed_img_enc)
