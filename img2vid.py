@@ -36,11 +36,12 @@ def call_api(api_endpoint, **payload):
 def call_img2img_api(**payload):
     return call_api('sdapi/v1/img2img', **payload)
 
-def img2img_payload(pl_image, pl_prompt, pl_negative_prompt, pl_seed = -1, pl_steps = 30, pl_denoise = 0.5):
+def img2img_payload(pl_image, pose_image, pl_prompt, pl_negative_prompt, pl_seed = -1, pl_steps = 30, pl_denoise = 0.5, guidance_scale = 7, ):
     return {
             "prompt": pl_prompt,
             "negative_prompt": pl_negative_prompt,
             "seed": pl_seed,
+            "sampler_name": "DPM++ 2M Karras",
             "steps": pl_steps,
             "width": 512,
             "height": 512,
@@ -48,7 +49,25 @@ def img2img_payload(pl_image, pl_prompt, pl_negative_prompt, pl_seed = -1, pl_st
             "n_iter": 1,
             "init_images": [pl_image],
             "batch_size": 1,
-            # "mask": encode_file_to_base64(r"B:\path\to\mask.png")
+            "cfg_scale": guidance_scale,
+            "alwayson_scripts": {
+                "ControlNet": {
+                    "args" : [{
+                            "controlnet_module": "none",
+                            "enabled": "true",
+                            "image": {
+                                "image": pose_image,
+                            },
+                            "module": "openpose",
+                            "model": "control_v11p_sd15_openpose [cab727d4]",
+                            "controlnet_guidance": 1.0,
+                            "control_mode": "Balanced",
+                            "weight": 1,
+                            "guidance_end": 1,
+                            "guidance_start": 0,
+                        }]
+                }
+            }
         }
 
 def show_img(image_enc):
@@ -89,39 +108,39 @@ if __name__ == '__main__':
     session_path = os.path.join(image_out_dir, session_name )
     os.mkdir(session_path)
 
-    prompt = "totally fascinating cinematic exciting dramatic lighting highly detailed and intricate"
+    prompt = "dancer cinematic exciting dramatic lighting highly detailed and intricate"
     negative_prompt = "monochrome"
 
     batch_size = 1
+    pl_seed = 5432143
     image_input_list = get_image_list(image_in_dir)
+    pose_list = get_image_list(pose_dir)
     project_len = len(image_input_list)
 
     seed_img_enc = encode_file_to_base64(image_input_list[0])
-
+    
 
     for filenum in range(project_len): # (5): # 
         print(filenum, " of ", project_len)
-        image_in_raw = image_input_list[filenum]
-        image_in_enc = encode_file_to_base64(image_in_raw)
 
+        image_in_enc = encode_file_to_base64(image_input_list[filenum])
+        pose_img_enc = encode_file_to_base64(pose_list[filenum])
 
         denoise = denoise_incr(filenum, len(image_input_list))
         print(denoise)
 
-        blend_enc = blend_images(seed_img_enc, image_in_enc, blend = 0.15)
-        show_img(blend_enc)
+        # blend_enc = blend_images(seed_img_enc, image_in_enc, blend = 0.15)
+        show_img(pose_img_enc)
         # add exponential random for blend? or based on modulo
 
-        payload = img2img_payload(blend_enc, prompt, negative_prompt, -1, 30, denoise)
+        payload = img2img_payload(image_in_enc, pose_img_enc, prompt, negative_prompt, -1, 30, 0.5)
         response = call_img2img_api(**payload)
         images = response.get('images')
 
         image_out_path = img_out_path(filenum)
         print(image_out_path)
-
         for index, image in enumerate(response.get('images')):
             decode_and_save_base64(image, image_out_path)
+            show_img(image)
 
-            show_img(seed_img_enc)
-            seed_img_enc = image
-            show_img(seed_img_enc)
+            # seed_img_enc = image
