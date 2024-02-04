@@ -131,17 +131,19 @@ if __name__ == '__main__':
         image_source_base64 = encode_file_to_base64(images_list[filenum])
         pose_source_base64 = encode_file_to_base64(pose_list[filenum])
 
-        payload = img2img_payload(parameters, model_checkpoint[1], image_source_base64, pose_source_base64)
+        seed_image_base64 = blend_images_base64(image_source_base64, seed_image_base64, blend = 0.5)
+        show_img(seed_image_base64)
+
+        payload = img2img_payload(parameters, model_checkpoint[1], seed_image_base64, pose_source_base64)
         response = call_img2img_api(**payload)
         images_output = response.get('images')
 
         for index, image_out_base64 in enumerate(images_output):
-            show_img(image_out_base64)
-
             if index == 0:
                 decode_and_write_base64(image_out_base64, img_out_path(filenum))
+                show_img(image_out_base64)
                 seed_image_base64 = blend_images_base64(image_out_base64, seed_image_base64, 0.5)
-                show_img(seed_image_base64)
+                
 
 
 
