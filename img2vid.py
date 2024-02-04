@@ -42,7 +42,14 @@ def call_txt2img_api(**payload):
     return call_api('sdapi/v1/txt2img', **payload)
 
 def openpose_payload(parameters, pose_image_base64):
-    parameters.update({ "alwayson_scripts": {"ControlNet": { "args": [{"enabled": True, "input_image": pose_image_base64, "model": "control_v11p_sd15_openpose [cab727d4]", "module": "none"}]} }})
+    parameters.update({ "alwayson_scripts": {"ControlNet": { "args": [{
+        "enabled": True,
+        "control_mode": "ControlNet is more important",
+        "input_image": pose_image_base64,
+        "model": "control_v11p_sd15_openpose [cab727d4]",
+        "module": "none",
+        "weight": 2
+    }]} }})
     return parameters
 
 def override_payload(parameters, model_checkpoint = "cyberrealistic_v41BackToBasics.safetensors [925bd947d7]"):
@@ -56,6 +63,11 @@ def image_source_payload(parameters, payload_image_base64):
 def img2img_payload(parameters, model_checkpoint, payload_image_base64, pose_image_base64):
     parameters = override_payload(parameters, model_checkpoint)
     parameters = image_source_payload(parameters, payload_image_base64)
+    parameters = openpose_payload(parameters, pose_image_base64)
+    return parameters
+
+def txt2img_payload(parameters, model_checkpoint, payload_image_base64, pose_image_base64):
+    parameters = override_payload(parameters, model_checkpoint)
     parameters = openpose_payload(parameters, pose_image_base64)
     return parameters
 
@@ -90,14 +102,14 @@ if __name__ == '__main__':
     model_checkpoint = ["faetastic_Version2.safetensors [3c7a4c79e1]", "cyberrealistic_v41BackToBasics.safetensors [925bd947d7]"]
 
     parameters = {
-        "prompt": "brightly lit dancer cinematic exciting dramatic lighting highly detailed and intricate",
-        "negative_prompt": "monochrome",
-        "seed": 3873480359,
+        "prompt": "",
+        "negative_prompt": "",
+        "seed": -1,
         "sampler_name": "DPM++ 2M Karras",
-        "steps": 25,
+        "steps": 45,
         "width": 512,
         "height": 512,
-        "denoising_strength": 0.5,
+        "denoising_strength": 0.35,
         "n_iter": 1,
         "batch_size": 1,
         "cfg_scale": 7,
@@ -122,35 +134,32 @@ if __name__ == '__main__':
     images_list = get_image_list(images_in)
     pose_list = get_image_list(pose_dir)
     project_len = len(images_list)
+    blank_image = "D:\\hcde496\\blank.png"
 
-    seed_image_base64 = encode_file_to_base64(images_list[0])
+    # use image
+    # seed_image_base64 = encode_file_to_base64(images_list[0])
+
+    # or use blank
+    seed_image_base64 = encode_file_to_base64(blank_image)
     
     # image loop
-    for filenum in range(10): 
-        print(filenum, " of ", project_len)
-        image_source_base64 = encode_file_to_base64(images_list[filenum])
+    for filenum in range(len(images_list)): 
+        print(filenum, " of ", len(images_list))
+        
+        # use pose source?
         pose_source_base64 = encode_file_to_base64(pose_list[filenum])
 
-        seed_image_base64 = blend_images_base64(image_source_base64, seed_image_base64, blend = 0.5)
-        show_img(seed_image_base64)
+        # use img source?
+        # image_source_base64 = encode_file_to_base64(images_list[filenum])
+        # seed_image_base64 = blend_images_base64(image_source_base64, seed_image_base64, 0.5)
+        # show_img(seed_image_base64)
 
-        payload = img2img_payload(parameters, model_checkpoint[1], seed_image_base64, pose_source_base64)
+        payload = img2img_payload(parameters, model_checkpoint[0], seed_image_base64, pose_source_base64)
         response = call_img2img_api(**payload)
         images_output = response.get('images')
 
         for index, image_out_base64 in enumerate(images_output):
             if index == 0:
                 decode_and_write_base64(image_out_base64, img_out_path(filenum))
-                show_img(image_out_base64)
                 seed_image_base64 = blend_images_base64(image_out_base64, seed_image_base64, 0.5)
                 
-
-
-
-
-        # denoise = denoise_incr(filenum, len(images_list))
-        # print(denoise)
-
-        # blend_enc = blend_images(seed_img_enc, image_in_enc, blend = 0.15)
-        # show_img(pose_img_enc)
-        # add exponential random for blend? or based on modulo
