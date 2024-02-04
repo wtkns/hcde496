@@ -11,17 +11,19 @@ from io import BytesIO
 def get_image_list(image_dir):
     return [os.path.join(image_dir, image_name) for image_name in os.listdir(image_dir)] 
 
-def get_img_in(filename):
-    with open(filename, 'rb') as file:
-        return base64.b64encode(file.read()).decode('utf-8')
-
 def encode_file_to_base64(path):
     with open(path, 'rb') as file:
         return base64.b64encode(file.read()).decode('utf-8')
 
-def decode_and_save_base64(base64_str, save_path):
+def decode_and_write_base64(base64_str, save_path):
+    write_file(decode_base64(base64_str), save_path)
+    
+def decode_base64(base64_str):
+    return base64.b64decode(base64_str)
+
+def write_file(file_data, save_path):
     with open(save_path, "wb") as file:
-        file.write(base64.b64decode(base64_str))
+        file.write(file_data)
 
 def call_api(api_endpoint, **payload):
     data = json.dumps(payload).encode('utf-8')
@@ -36,32 +38,26 @@ def call_api(api_endpoint, **payload):
 def call_img2img_api(**payload):
     return call_api('sdapi/v1/img2img', **payload)
 
-
 def call_txt2img_api(**payload):
     return call_api('sdapi/v1/txt2img', **payload)
 
-def text2img_payload(pl_prompt, pl_seed):
-    return {
-        "prompt": pl_prompt,
-        "seed": pl_seed,
-    }
+def openpose_payload(parameters, pose_image_base64):
+    parameters.update({ "alwayson_scripts": {"ControlNet": { "args": [{"enabled": True, "input_image": pose_image_base64, "model": "control_v11p_sd15_openpose [cab727d4]", "module": "none"}]} }})
+    return parameters
 
-def img2img_payload(pl_model, pl_image, pl_pose, pl_prompt, pl_neg_prompt, pl_seed = -1, pl_steps = 30, pl_denoise = 0.5, pl_guidance = 7, ):
-    return {
-            "model": pl_model,
-            "prompt": pl_prompt,
-            "negative_prompt": pl_neg_prompt,
-            "seed": pl_seed,
-            "sampler_name": "DPM++ 2M Karras",
-            "steps": pl_steps,
-            "width": 512,
-            "height": 512,
-            "denoising_strength": pl_denoise,
-            "n_iter": 1,
-            "init_images": [pl_image],
-            "batch_size": 1,
-            "cfg_scale": pl_guidance,
-        }
+def override_payload(parameters, model_checkpoint = "cyberrealistic_v41BackToBasics.safetensors [925bd947d7]"):
+    parameters.update({ "override_settings": {"sd_model_checkpoint": model_checkpoint}})
+    return parameters
+
+def image_source_payload(parameters, payload_image_base64):
+    parameters.update({ "init_images": [payload_image_base64]})
+    return parameters
+
+def img2img_payload(parameters, model_checkpoint, payload_image_base64, pose_image_base64):
+    parameters = override_payload(parameters, model_checkpoint)
+    parameters = image_source_payload(parameters, payload_image_base64)
+    parameters = openpose_payload(parameters, pose_image_base64)
+    return parameters
 
 def show_img(image_enc):
     Image.open(BytesIO(base64.b64decode(image_enc))).show()
@@ -72,33 +68,42 @@ def img_out_path(filenum):
 
 def decode_img(image):
     return Image.open(BytesIO(base64.b64decode(image)))
-    
-def blend_images(image_one_enc, image_two_enc, blend = 0.5):
+
+def image_binary_to_base64(image_binary):
+    binary_file_obj = BytesIO()
+    image_binary.save(binary_file_obj, format="JPEG")
+    file_binary = binary_file_obj.getvalue()  # blend_bytes: image in binary format.
+    return base64.b64encode(file_binary).decode('utf-8')
+
+def blend_images_base64(image_one_base64, image_two_base64, blend = 0.5):
     # If alpha is 0.0, a copy of the first image is returned. If alpha is 1.0, a copy of the second image is returned. 
-    image_one_dec = decode_img(image_one_enc)
-    image_two_dec = decode_img(image_two_enc)
-    img_blend_dec = Image.blend(image_one_dec, image_two_dec, blend)
-    blend_file = BytesIO()
-    img_blend_dec.save(blend_file, format="JPEG")
-    blend_bytes = blend_file.getvalue()  # blend_bytes: image in binary format.
-    return base64.b64encode(blend_bytes).decode('utf-8')
+    image_one_binary = decode_img(image_one_base64)
+    image_two_binary = decode_img(image_two_base64)
+    img_blend_binary = Image.blend(image_one_binary, image_two_binary, blend)
+    return image_binary_to_base64(img_blend_binary)
 
 def denoise_incr(incr_num, total):
     return (((incr_num +1) * (0.3/total))+0.45)
 
 if __name__ == '__main__':
-    # set params
-    # model = "cyberrealistic_v41BackToBasics.safetensors [925bd947d7]"
-    model = "faetastic_Version2.safetensors [3c7a4c79e1]"
+    project_name = "tophat"
+    model_checkpoint = ["faetastic_Version2.safetensors [3c7a4c79e1]", "cyberrealistic_v41BackToBasics.safetensors [925bd947d7]"]
+
+    parameters = {
+        "prompt": "brightly lit dancer cinematic exciting dramatic lighting highly detailed and intricate",
+        "negative_prompt": "monochrome",
+        "seed": 3873480359,
+        "sampler_name": "DPM++ 2M Karras",
+        "steps": 25,
+        "width": 512,
+        "height": 512,
+        "denoising_strength": 0.5,
+        "n_iter": 1,
+        "batch_size": 1,
+        "cfg_scale": 7,
+        "batch_size": 1,
+    }
     
-    project_name = "meshes"
-    prompt = "dancer cinematic exciting dramatic lighting highly detailed and intricate"
-    neg_prompt = "monochrome"
-    batch_size = 1
-    seed = 3873480359
-    steps = 25
-    denoise = 0.5
-    guidance = 7
 
     # defaults
     webui_server_url = 'http://127.0.0.1:7860'
@@ -118,31 +123,26 @@ if __name__ == '__main__':
     pose_list = get_image_list(pose_dir)
     project_len = len(images_list)
 
-    blend_image = encode_file_to_base64(images_list[0])
+    seed_image_base64 = encode_file_to_base64(images_list[0])
     
     # image loop
     for filenum in range(10): 
         print(filenum, " of ", project_len)
-        image_source = encode_file_to_base64(images_list[filenum])
-        pose_source = encode_file_to_base64(pose_list[filenum])
+        image_source_base64 = encode_file_to_base64(images_list[filenum])
+        pose_source_base64 = encode_file_to_base64(pose_list[filenum])
 
-        # payload = img2img_payload(model, image_source, pose_source, prompt, neg_prompt, seed, steps, denoise, guidance)
-        payload = text2img_payload("happy dancing elf", seed)
-        payload.update({ "override_settings": {"sd_model_checkpoint": model}})
-        payload.update({ "alwayson_scripts": {"ControlNet": { "args": [{"enabled": True, "input_image": pose_source,"model": "control_v11p_sd15_openpose [cab727d4]", "module": "none"}]} }})
-        # response = call_img2img_api(**payload)
+        payload = img2img_payload(parameters, model_checkpoint[1], image_source_base64, pose_source_base64)
+        response = call_img2img_api(**payload)
+        images_output = response.get('images')
 
-        response = call_txt2img_api(**payload)
-        images = response.get('images')
-        image_out_path = img_out_path(filenum)
+        for index, image_out_base64 in enumerate(images_output):
+            show_img(image_out_base64)
 
-        # show_img(pose_source)
+            if index == 0:
+                decode_and_write_base64(image_out_base64, img_out_path(filenum))
+                seed_image_base64 = blend_images_base64(image_out_base64, seed_image_base64, 0.5)
+                show_img(seed_image_base64)
 
-        for index, image in enumerate(response.get('images')):
-            decode_and_save_base64(image, image_out_path)
-            show_img(image)
-
-            # seed_img_enc = image
 
 
 
