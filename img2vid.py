@@ -98,18 +98,20 @@ def denoise_incr(incr_num, total):
     return (((incr_num +1) * (0.3/total))+0.45)
 
 if __name__ == '__main__':
-    project_name = "tophat"
-    model_checkpoint = ["faetastic_Version2.safetensors [3c7a4c79e1]", "cyberrealistic_v41BackToBasics.safetensors [925bd947d7]"]
+    project_name = "meshes"
+    model_checkpoint = ["faetastic_Version2.safetensors [3c7a4c79e1]", "cyberrealistic_v41BackToBasics.safetensors [925bd947d7]", "faetastic_Version2.safetensors [3c7a4c79e1]"]
+    session_seed = datetime.now().strftime("%H%M%S")
+    print(session_seed)
 
     parameters = {
-        "prompt": "",
-        "negative_prompt": "",
-        "seed": -1,
+        "prompt": "dreamlike photo highly detailed cinematic",
+        "negative_prompt": "nude anime animation drawing",
+        "seed": session_seed,
         "sampler_name": "DPM++ 2M Karras",
-        "steps": 45,
-        "width": 512,
-        "height": 512,
-        "denoising_strength": 0.35,
+        "steps": 20,
+        "width": 1024,
+        "height": 1024,
+        "denoising_strength": 0.5,
         "n_iter": 1,
         "batch_size": 1,
         "cfg_scale": 7,
@@ -127,6 +129,7 @@ if __name__ == '__main__':
     #prepare output
     images_out = os.path.join(project_dir, "images", "output", )
     session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     session_path = os.path.join(images_out, session_name )
     os.mkdir(session_path)
 
@@ -134,7 +137,7 @@ if __name__ == '__main__':
     images_list = get_image_list(images_in)
     pose_list = get_image_list(pose_dir)
     project_len = len(images_list)
-    blank_image = "D:\\hcde496\\blank.png"
+    blank_image = "D:\\hcde496\\blank1024x1024.png"
 
     # use image
     # seed_image_base64 = encode_file_to_base64(images_list[0])
@@ -151,15 +154,23 @@ if __name__ == '__main__':
 
         # use img source?
         # image_source_base64 = encode_file_to_base64(images_list[filenum])
-        # seed_image_base64 = blend_images_base64(image_source_base64, seed_image_base64, 0.5)
+        # seed_image_base64 = blend_images_base64(image_source_base64, seed_image_base64, 0.75)
         # show_img(seed_image_base64)
 
-        payload = img2img_payload(parameters, model_checkpoint[0], seed_image_base64, pose_source_base64)
+        payload = img2img_payload(parameters, model_checkpoint[2], seed_image_base64, pose_source_base64)
         response = call_img2img_api(**payload)
         images_output = response.get('images')
 
         for index, image_out_base64 in enumerate(images_output):
             if index == 0:
                 decode_and_write_base64(image_out_base64, img_out_path(filenum))
-                seed_image_base64 = blend_images_base64(image_out_base64, seed_image_base64, 0.5)
-                
+                seed_image_base64 = blend_images_base64(image_out_base64, seed_image_base64, 0)
+
+        dstrength = ((0.25/30)*(filenum % 30)) + 0.5
+        print
+        print(dstrength)
+        parameters.update({"denoising_strength": dstrength})
+
+
+        if filenum % 30 == 0:
+            parameters.update({"seed": datetime.now().strftime("%H%M%S")})
