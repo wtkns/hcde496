@@ -1,5 +1,14 @@
 # hcde496
 
+## week ?
+
+removed denoise incrementer temporarily to refactor
+
+def denoise_incr(incr_num, total):
+    return (((incr_num +1) * (0.3/total))+0.45)
+
+
+
 ## week 2
 09-jan through 15-jan
 
