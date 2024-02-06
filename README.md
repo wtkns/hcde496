@@ -1,13 +1,22 @@
 # hcde496
 
-## week ?
+## week 6
+6-feb through 12-feb
 
-removed denoise incrementer temporarily to refactor
+## week 5
+30-jan through 5-feb
 
-def denoise_incr(incr_num, total):
-    return (((incr_num +1) * (0.3/total))+0.45)
+finally got controlnet working for openpose via api
 
+denoise incrementer
+eg. def denoise_incr(incr_num, total):
+        return (((incr_num +1) * (0.3/total))+0.45)
 
+## week 4
+23-jan through 29-jan
+
+## week 3
+16-jan through 22-jan
 
 ## week 2
 09-jan through 15-jan
